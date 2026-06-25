@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "862975158068",
+    "project_id": "car-game-7884d",
+    "storage_bucket": "car-game-7884d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:862975158068:android:e432442b55314338ffa761",
+        "android_client_info": {
+          "package_name": "com.kawsar.car_game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2BoqplLR0KIKS19oAGSOQed3DDUyNRWg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
