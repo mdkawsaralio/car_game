@@ -32,13 +32,10 @@ class HomeController extends GetxController {
 
   // ✅ Called when returning from game
   void onResume() {
-    print('🔄 HomeController onResume called');
     _playHomeMusic();
   }
 
   Future<void> _playHomeMusic() async {
-    print('🎵 Starting home music...');
-
     // Only stop game sounds
     _soundService.stopCarSound();
     _soundService.stopTurboSound();
@@ -67,9 +64,7 @@ class HomeController extends GetxController {
           backgroundColor: Colors.grey[800],
           colorText: Colors.white,
         );
-      } catch (e) {
-        print('Logout error: $e');
-      }
+      } catch (e) {}
     } else {
       try {
         await Get.toNamed(AppRoutes.login);

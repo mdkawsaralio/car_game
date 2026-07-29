@@ -90,11 +90,13 @@ class _SignUpPageState extends State<SignUpPage>
         !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
       return _setError('Please enter a valid email address');
     }
-    if (pass.length < 6)
+    if (pass.length < 6) {
       return _setError('Password must be at least 6 characters');
+    }
     if (pass != confirmPass) return _setError('Passwords do not match');
-    if (!acceptedTerms)
+    if (!acceptedTerms) {
       return _setError('Please accept the Terms and Conditions');
+    }
 
     setState(() {
       isLoading = true;

@@ -1,4 +1,3 @@
-// main.dart
 import 'package:car_game5/routes/pages.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -6,15 +5,16 @@ import 'package:firebase_core/firebase_core.dart';
 import 'routes/routes.dart';
 import 'services/connectivity_services.dart';
 import 'sound/sound_service.dart';
+import 'car_customization/car_skin_service.dart';
+import 'achivement/achivement_services.dart';
+import 'login/user_data.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
     await Firebase.initializeApp();
-  } catch (e) {
-    print('❌ Firebase error: $e');
-  }
+  } catch (_) {}
 
   runApp(const MyApp());
 }
@@ -24,17 +24,23 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize Connectivity Service
     if (!Get.isRegistered<ConnectivityService>()) {
       Get.put(ConnectivityService(), permanent: true);
     }
-
-    // Initialize Sound Service with preloading
     if (!Get.isRegistered<SoundService>()) {
-      // Register SoundService. Do not call preloadSounds here because
-      // the method may not exist on some implementations of SoundService.
       Get.put(SoundService(), permanent: true);
-      print('✅ SoundService registered');
+    }
+    if (!Get.isRegistered<CarSkinService>()) {
+      Get.put(CarSkinService(), permanent: true);
+    }
+    if (!Get.isRegistered<AchievementService>()) {
+      Get.put(AchievementService(), permanent: true);
+    }
+    if (!Get.isRegistered<UserDataService>()) {
+      // Garage page (and others) call Get.find<UserDataService>() —
+      // it must be registered here or that lookup throws and the
+      // garage page fails to build.
+      Get.put(UserDataService(), permanent: true);
     }
 
     return GetMaterialApp(

@@ -1,3 +1,4 @@
+import 'package:car_game5/car_customization/garage_page.dart';
 import 'package:car_game5/home/home.dart';
 import 'package:car_game5/routes/routes.dart';
 import 'package:car_game5/login/login.dart';
@@ -25,6 +26,11 @@ class AppPages {
     GetPage(
       name: AppRoutes.signup, // Add this
       page: () => const SignUpPage(),
+      transition: Transition.fade,
+    ),
+    GetPage(
+      name: AppRoutes.garage,
+      page: () => GaragePage(),
       transition: Transition.fade,
     ),
   ];

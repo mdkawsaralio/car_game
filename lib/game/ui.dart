@@ -37,7 +37,6 @@ class MovingDashedLine extends StatelessWidget {
             builder: (context, child) {
               double speedFactor = currentSpeed / 6.0;
               double offset = (animation.value * total * speedFactor) % total;
-
               return Transform.translate(
                 offset: Offset(0, offset),
                 child: Stack(
@@ -98,6 +97,8 @@ class GameHud extends StatelessWidget {
   final double speed;
   final bool isOfflineMode;
   final String? userEmail;
+  final bool isBoosting;
+  final double boostCooldown;
 
   const GameHud({
     super.key,
@@ -106,6 +107,8 @@ class GameHud extends StatelessWidget {
     required this.speed,
     this.isOfflineMode = true,
     this.userEmail,
+    required this.isBoosting,
+    required this.boostCooldown,
   });
 
   @override
@@ -207,6 +210,59 @@ class GameHud extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.flash_on,
+                  color: isBoosting ? Colors.orange : Colors.grey,
+                  size: 16,
+                ),
+                const SizedBox(width: 4),
+                if (isBoosting)
+                  const Text(
+                    'BOOST ACTIVE',
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  )
+                else if (boostCooldown > 0)
+                  Text(
+                    'Cooldown: ${boostCooldown.toStringAsFixed(0)}s',
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  )
+                else
+                  const Text(
+                    'Ready',
+                    style: TextStyle(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                const Spacer(),
+                if (boostCooldown > 0)
+                  Container(
+                    width: 50,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[800],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: FractionallySizedBox(
+                      widthFactor: boostCooldown / 30.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -214,18 +270,42 @@ class GameHud extends StatelessWidget {
   }
 }
 
+// ============================================================
+// GAME CONTROL PANEL - HOLD TO BOOST
+// ============================================================
 class GameControlPanel extends StatelessWidget {
-  final VoidCallback onMoveLeft;
-  final VoidCallback onMoveRight;
-  final Function(bool) onNitroChanged;
+  final VoidCallback onMoveLeftStart;
+  final VoidCallback onMoveLeftStop;
+  final VoidCallback onMoveRightStart;
+  final VoidCallback onMoveRightStop;
+  final VoidCallback onBoostStart;
+  final VoidCallback onBoostStop;
+  final VoidCallback onBuyBoost;
   final bool isGameOver;
+  final bool isBoosting;
+  final bool canBoost;
+  // Boost ring state
+  final double boostTimeLeft;
+  final double maxBoostSeconds;
+  final double boostCooldown;
+  final double maxCooldownSeconds;
 
   const GameControlPanel({
     super.key,
-    required this.onMoveLeft,
-    required this.onMoveRight,
-    required this.onNitroChanged,
+    required this.onMoveLeftStart,
+    required this.onMoveLeftStop,
+    required this.onMoveRightStart,
+    required this.onMoveRightStop,
+    required this.onBoostStart,
+    required this.onBoostStop,
+    required this.onBuyBoost,
     required this.isGameOver,
+    required this.isBoosting,
+    required this.canBoost,
+    this.boostTimeLeft = 0.0,
+    this.maxBoostSeconds = 5.0,
+    this.boostCooldown = 0.0,
+    this.maxCooldownSeconds = 30.0,
   });
 
   @override
@@ -237,8 +317,11 @@ class GameControlPanel extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // LEFT ARROW
           GestureDetector(
-            onTap: onMoveLeft,
+            onTapDown: (_) => onMoveLeftStart(),
+            onTapUp: (_) => onMoveLeftStop(),
+            onTapCancel: onMoveLeftStop,
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: const BoxDecoration(
@@ -252,32 +335,24 @@ class GameControlPanel extends StatelessWidget {
               ),
             ),
           ),
-          GestureDetector(
-            onTapDown: (_) => onNitroChanged(true),
-            onTapUp: (_) {
-              if (!isGameOver) onNitroChanged(false);
-            },
-            onTapCancel: () {
-              if (!isGameOver) onNitroChanged(false);
-            },
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Colors.orange,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.orangeAccent,
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.bolt, color: Colors.white, size: 36),
-            ),
+          // BOOST BUTTON - HOLD TO ACTIVATE
+          _BoostButton(
+            onBoostStart: onBoostStart,
+            onBoostStop: onBoostStop,
+            onBuyBoost: onBuyBoost,
+            isGameOver: isGameOver,
+            isBoosting: isBoosting,
+            canBoost: canBoost,
+            boostTimeLeft: boostTimeLeft,
+            maxBoostSeconds: maxBoostSeconds,
+            boostCooldown: boostCooldown,
+            maxCooldownSeconds: maxCooldownSeconds,
           ),
+          // RIGHT ARROW
           GestureDetector(
-            onTap: onMoveRight,
+            onTapDown: (_) => onMoveRightStart(),
+            onTapUp: (_) => onMoveRightStop(),
+            onTapCancel: onMoveRightStop,
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: const BoxDecoration(
@@ -297,6 +372,234 @@ class GameControlPanel extends StatelessWidget {
   }
 }
 
+// ============================================================
+// BOOST BUTTON
+// - Ready:     full green ring + gentle pulse.
+// - Boosting:  orange ring DRAINS as boostTimeLeft counts down.
+// - Cooldown:  ring FILLS back up (grey -> green) as boostCooldown counts down.
+// Release stops the boost immediately (handled by the controller); the
+// ring just reflects whatever state the controller reports.
+// ============================================================
+class _BoostButton extends StatefulWidget {
+  final VoidCallback onBoostStart;
+  final VoidCallback onBoostStop;
+  final VoidCallback onBuyBoost;
+  final bool isGameOver;
+  final bool isBoosting;
+  final bool canBoost;
+  final double boostTimeLeft;
+  final double maxBoostSeconds;
+  final double boostCooldown;
+  final double maxCooldownSeconds;
+
+  const _BoostButton({
+    required this.onBoostStart,
+    required this.onBoostStop,
+    required this.onBuyBoost,
+    required this.isGameOver,
+    required this.isBoosting,
+    required this.canBoost,
+    required this.boostTimeLeft,
+    required this.maxBoostSeconds,
+    required this.boostCooldown,
+    required this.maxCooldownSeconds,
+  });
+
+  @override
+  State<_BoostButton> createState() => _BoostButtonState();
+}
+
+class _BoostButtonState extends State<_BoostButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseController;
+  // Tracks whether THIS press is the one that started a boost, so we
+  // know on release whether to stop a boost or treat it as a buy-tap.
+  bool _pressStartedBoost = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool ready = widget.canBoost && !widget.isBoosting;
+    final bool onCooldown = widget.boostCooldown > 0 && !widget.isBoosting;
+
+    // Ring progress: 1.0 = full green ring, drains/fills based on state.
+    double ringValue;
+    Color ringColor;
+    if (widget.isBoosting) {
+      ringValue = (widget.boostTimeLeft / widget.maxBoostSeconds).clamp(0.0, 1.0);
+      ringColor = Colors.orangeAccent;
+    } else if (onCooldown) {
+      ringValue = 1.0 - (widget.boostCooldown / widget.maxCooldownSeconds).clamp(0.0, 1.0);
+      ringColor = Color.lerp(Colors.grey.shade600, Colors.greenAccent, ringValue)!;
+    } else {
+      ringValue = 1.0;
+      ringColor = Colors.greenAccent;
+    }
+
+    final Color baseColor = widget.isBoosting
+        ? Colors.deepOrange
+        : (ready ? Colors.blueAccent : Colors.grey.shade700);
+
+    return Listener(
+      // Raw pointer events instead of GestureDetector's onTapDown/onTapUp
+      // + onLongPress on the same widget: having both registered meant
+      // Flutter's gesture arena had to decide "tap vs long-press" after
+      // holding for ~500ms, and long-press winning fired onTapCancel —
+      // which stopped the boost early even though the finger never left
+      // the screen. Listener has no arena to resolve: down is down, up
+      // is up, for exactly as long as you hold.
+      onPointerDown: (_) {
+        if (widget.isGameOver) return;
+        if (!widget.isBoosting && widget.canBoost) {
+          _pressStartedBoost = true;
+          widget.onBoostStart();
+        } else {
+          _pressStartedBoost = false;
+        }
+      },
+      onPointerUp: (_) {
+        if (_pressStartedBoost) {
+          _pressStartedBoost = false;
+          widget.onBoostStop();
+        } else if (!widget.isBoosting && !widget.isGameOver) {
+          // Tapped while boost wasn't available (e.g. on cooldown) —
+          // treat the tap as an attempt to buy an instant boost.
+          widget.onBuyBoost();
+        }
+      },
+      onPointerCancel: (_) {
+        if (_pressStartedBoost) {
+          _pressStartedBoost = false;
+          widget.onBoostStop();
+        }
+      },
+      child: AnimatedBuilder(
+        animation: _pulseController,
+        builder: (context, child) {
+          // Only animate the glow pulse when ready or firing.
+          final double t = (ready || widget.isBoosting)
+              ? _pulseController.value
+              : 0.0;
+          final double ringScale = 1.0 + (t * 0.35);
+          final double ringOpacity =
+              (1.0 - t) * (ready || widget.isBoosting ? 0.55 : 0.0);
+
+          return SizedBox(
+            width: 86,
+            height: 86,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Progress ring showing boost/cooldown state
+                SizedBox(
+                  width: 78,
+                  height: 78,
+                  child: CircularProgressIndicator(
+                    value: ringValue,
+                    strokeWidth: 5,
+                    backgroundColor: Colors.white12,
+                    valueColor: AlwaysStoppedAnimation<Color>(ringColor),
+                  ),
+                ),
+                // Expanding pulse ring (only when ready or boosting)
+                if (ready || widget.isBoosting)
+                  Transform.scale(
+                    scale: ringScale,
+                    child: Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: baseColor.withOpacity(ringOpacity),
+                          width: 3,
+                        ),
+                      ),
+                    ),
+                  ),
+                // Main button
+                Transform.scale(
+                  scale: widget.isBoosting ? 1.0 + (t * 0.05) : 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: widget.isBoosting
+                            ? [Colors.orangeAccent, Colors.deepOrange.shade700]
+                            : (ready
+                                  ? [Colors.lightBlueAccent, Colors.blue.shade800]
+                                  : [Colors.grey.shade600, Colors.grey.shade800]),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: baseColor.withOpacity(
+                            widget.isBoosting ? 0.7 : (ready ? 0.45 : 0.0),
+                          ),
+                          blurRadius: widget.isBoosting ? 20 : 12,
+                          spreadRadius: widget.isBoosting ? 3 : 1,
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.25),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.bolt,
+                          color: Colors.white,
+                          size: widget.isBoosting ? 30 : 28,
+                        ),
+                        if (!widget.isBoosting && !widget.canBoost)
+                          const Text(
+                            '💰100',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        else if (widget.isBoosting)
+                          Text(
+                            '${widget.boostTimeLeft.toStringAsFixed(1)}s',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// GAME OVER MODAL
+// ============================================================
 class GameOverModal extends StatelessWidget {
   final double screenWidth;
   final int finalScore;
@@ -305,6 +608,7 @@ class GameOverModal extends StatelessWidget {
   final int highScore;
   final VoidCallback onRestart;
   final VoidCallback? onRevive;
+  final VoidCallback onHome;
   final bool isLoggedIn;
 
   const GameOverModal({
@@ -316,6 +620,7 @@ class GameOverModal extends StatelessWidget {
     required this.highScore,
     required this.onRestart,
     required this.onRevive,
+    required this.onHome,
     this.isLoggedIn = false,
   });
 
@@ -426,6 +731,19 @@ class GameOverModal extends StatelessWidget {
                     child: const Text(
                       "Race Again",
                       style: TextStyle(letterSpacing: 1),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white60,
+                      minimumSize: const Size(double.infinity, 40),
+                    ),
+                    onPressed: onHome,
+                    icon: const Icon(Icons.home, size: 18),
+                    label: const Text(
+                      "Back to Home",
+                      style: TextStyle(letterSpacing: 1, fontSize: 13),
                     ),
                   ),
                 ],
@@ -567,6 +885,19 @@ class GameOverModal extends StatelessWidget {
                     child: const Text(
                       "Race Again",
                       style: TextStyle(letterSpacing: 1),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white60,
+                      minimumSize: const Size(double.infinity, 40),
+                    ),
+                    onPressed: onHome,
+                    icon: const Icon(Icons.home, size: 18),
+                    label: const Text(
+                      "Back to Home",
+                      style: TextStyle(letterSpacing: 1, fontSize: 13),
                     ),
                   ),
                 ],

@@ -63,7 +63,6 @@ class LeaderboardService {
   }) async {
     final User? user = _auth.currentUser;
     if (user == null) {
-      print('No user logged in - skipping leaderboard update');
       return;
     }
 
@@ -93,7 +92,6 @@ class LeaderboardService {
           'email': email,
           'photoUrl': photoUrl ?? data['photoUrl'],
         });
-        print('✅ Player stats updated for: $username');
       } else {
         // Create new player
         await docRef.set({
@@ -106,10 +104,8 @@ class LeaderboardService {
           'lastPlayed': FieldValue.serverTimestamp(),
           'createdAt': FieldValue.serverTimestamp(),
         });
-        print('✅ New player created: $username');
       }
     } catch (e) {
-      print('❌ Error updating player stats: $e');
       // Don't rethrow - let the game continue even if leaderboard fails
     }
   }
@@ -126,7 +122,6 @@ class LeaderboardService {
       }
       return null;
     } catch (e) {
-      print('❌ Error getting player stats: $e');
       return null;
     }
   }
@@ -144,7 +139,6 @@ class LeaderboardService {
         return PlayerStats.fromMap(doc.data(), doc.id);
       }).toList();
     } catch (e) {
-      print('❌ Error getting top players: $e');
       return [];
     }
   }
@@ -163,7 +157,6 @@ class LeaderboardService {
             }).toList();
           });
     } catch (e) {
-      print('❌ Error getting leaderboard stream: $e');
       return Stream.value([]);
     }
   }

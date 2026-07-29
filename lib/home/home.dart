@@ -21,9 +21,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     controller = Get.put(HomeController());
     WidgetsBinding.instance.addObserver(this);
 
-    // ✅ MOVED HERE - only runs once when page is created
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print('🏠 HomePage initState - calling onResume');
       controller.onResume();
     });
   }
@@ -37,16 +35,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // ✅ App came back to foreground
-      print('📱 App resumed from background');
       controller.onResume();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // ✅ REMOVED: postFrameCallback from here - moved to initState
-
     return Scaffold(
       backgroundColor: const Color(0xFF06060B),
       body: Stack(
@@ -98,6 +92,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                         Obx(() => _buildPrimaryButton(controller)),
                         const SizedBox(height: 16),
                         Obx(() => _buildSecondaryButton(controller)),
+                        // ========== NEW GARAGE BUTTON ==========
+                        const SizedBox(height: 16),
+                        _buildGarageButton(),
                       ],
                     ),
                   ),
@@ -358,6 +355,33 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // ========== NEW GARAGE BUTTON ==========
+  Widget _buildGarageButton() {
+    return SizedBox(
+      width: 260,
+      height: 48,
+      child: ElevatedButton.icon(
+        onPressed: () => Get.toNamed(AppRoutes.garage),
+        icon: const Icon(Icons.car_repair, color: Colors.white, size: 18),
+        label: const Text(
+          'GARAGE',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.5,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blueGrey.shade800,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       ),
     );
