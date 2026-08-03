@@ -547,9 +547,6 @@ class GameController extends GetxController {
   void _stopMoveLeft() => stopMoveLeft();
   void _stopMoveRight() => stopMoveRight();
 
-  // ============================================================
-  // BOOST - HOLD TO ACTIVATE
-  // ============================================================
   static const double maxBoostSeconds = 5.0;
   static const double maxCooldownSeconds = 30.0;
 
@@ -611,9 +608,6 @@ class GameController extends GetxController {
     speed.value = normalSpeedBase;
     _boostTimer?.cancel();
 
-    // Cooldown scales with how much boost was actually used: tap it
-    // briefly and get a short cooldown, drain the full 5s and get the
-    // full 30s cooldown.
     final double usedSeconds = maxBoostSeconds - boostTimeLeft.value;
     final double cooldownSeconds =
         (usedSeconds / maxBoostSeconds) * maxCooldownSeconds;
@@ -651,9 +645,6 @@ class GameController extends GetxController {
     speed.value = normalSpeedBase;
   }
 
-  // ============================================================
-  // GAME OVER & RESTART
-  // ============================================================
   Future<void> _saveToLeaderboard() async {
     try {
       await _leaderboardService.updatePlayerStats(
@@ -720,11 +711,7 @@ class GameController extends GetxController {
   void onClose() {
     _coinSoundTimer?.cancel();
     _cancelBoostTimers();
-    // Only stop the game-specific sounds here. Do NOT call
-    // _soundService.stopAllSounds() — it also stops the home-page music,
-    // and since this onClose() can fire *after* HomeController has already
-    // restarted the home music (page transitions take ~300ms), calling it
-    // was silently killing the home music right after it started.
+
     _soundService.stopTurboSound();
     _soundService.stopCarSound();
     _leftHoldTimer?.cancel();

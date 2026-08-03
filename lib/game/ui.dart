@@ -372,14 +372,6 @@ class GameControlPanel extends StatelessWidget {
   }
 }
 
-// ============================================================
-// BOOST BUTTON
-// - Ready:     full green ring + gentle pulse.
-// - Boosting:  orange ring DRAINS as boostTimeLeft counts down.
-// - Cooldown:  ring FILLS back up (grey -> green) as boostCooldown counts down.
-// Release stops the boost immediately (handled by the controller); the
-// ring just reflects whatever state the controller reports.
-// ============================================================
 class _BoostButton extends StatefulWidget {
   final VoidCallback onBoostStart;
   final VoidCallback onBoostStop;
@@ -412,8 +404,7 @@ class _BoostButton extends StatefulWidget {
 class _BoostButtonState extends State<_BoostButton>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
-  // Tracks whether THIS press is the one that started a boost, so we
-  // know on release whether to stop a boost or treat it as a buy-tap.
+
   bool _pressStartedBoost = false;
 
   @override
@@ -440,11 +431,20 @@ class _BoostButtonState extends State<_BoostButton>
     double ringValue;
     Color ringColor;
     if (widget.isBoosting) {
-      ringValue = (widget.boostTimeLeft / widget.maxBoostSeconds).clamp(0.0, 1.0);
+      ringValue = (widget.boostTimeLeft / widget.maxBoostSeconds).clamp(
+        0.0,
+        1.0,
+      );
       ringColor = Colors.orangeAccent;
     } else if (onCooldown) {
-      ringValue = 1.0 - (widget.boostCooldown / widget.maxCooldownSeconds).clamp(0.0, 1.0);
-      ringColor = Color.lerp(Colors.grey.shade600, Colors.greenAccent, ringValue)!;
+      ringValue =
+          1.0 -
+          (widget.boostCooldown / widget.maxCooldownSeconds).clamp(0.0, 1.0);
+      ringColor = Color.lerp(
+        Colors.grey.shade600,
+        Colors.greenAccent,
+        ringValue,
+      )!;
     } else {
       ringValue = 1.0;
       ringColor = Colors.greenAccent;
@@ -455,13 +455,6 @@ class _BoostButtonState extends State<_BoostButton>
         : (ready ? Colors.blueAccent : Colors.grey.shade700);
 
     return Listener(
-      // Raw pointer events instead of GestureDetector's onTapDown/onTapUp
-      // + onLongPress on the same widget: having both registered meant
-      // Flutter's gesture arena had to decide "tap vs long-press" after
-      // holding for ~500ms, and long-press winning fired onTapCancel —
-      // which stopped the boost early even though the finger never left
-      // the screen. Listener has no arena to resolve: down is down, up
-      // is up, for exactly as long as you hold.
       onPointerDown: (_) {
         if (widget.isGameOver) return;
         if (!widget.isBoosting && widget.canBoost) {
@@ -542,8 +535,14 @@ class _BoostButtonState extends State<_BoostButton>
                         colors: widget.isBoosting
                             ? [Colors.orangeAccent, Colors.deepOrange.shade700]
                             : (ready
-                                  ? [Colors.lightBlueAccent, Colors.blue.shade800]
-                                  : [Colors.grey.shade600, Colors.grey.shade800]),
+                                  ? [
+                                      Colors.lightBlueAccent,
+                                      Colors.blue.shade800,
+                                    ]
+                                  : [
+                                      Colors.grey.shade600,
+                                      Colors.grey.shade800,
+                                    ]),
                       ),
                       boxShadow: [
                         BoxShadow(
