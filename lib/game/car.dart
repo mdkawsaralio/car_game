@@ -46,10 +46,6 @@ class EnemyCar extends Car {
 }
 
 class CarFactory {
-  // Built once instead of on every single enemy spawn — the old code
-  // reconstructed this 10-entry list of maps (plus the color list below)
-  // every time an enemy was created, which is wasted allocation/GC churn
-  // happening every 1-2 seconds during gameplay.
   static final List<Map<String, dynamic>> _vehicleTypes = [
     {
       'asset': 'lib/assets/car1.png',
@@ -133,8 +129,10 @@ class CarFactory {
     },
   ];
 
-  static final int _totalVehicleWeight =
-      _vehicleTypes.fold(0, (sum, v) => sum + v['weight'] as int);
+  static final int _totalVehicleWeight = _vehicleTypes.fold(
+    0,
+    (sum, v) => sum + v['weight'] as int,
+  );
 
   static final List<Color> _enemyColors = [
     Colors.blue,
@@ -205,10 +203,7 @@ class PlayerCarWidget extends StatelessWidget {
   final double height;
   final bool nitroActive;
   final String assetPath; // new
-  // Optional override for the fallback drawn-car color scheme (used by
-  // the garage page so each skin's placeholder looks distinct even
-  // without its own PNG asset). If null, falls back to the original
-  // red/cyan (nitroActive) scheme used in-game.
+
   final Color? previewColor;
 
   const PlayerCarWidget({
@@ -225,13 +220,13 @@ class PlayerCarWidget extends StatelessWidget {
     final scaledWidth = width * 0.72;
     final scaledHeight = height * 0.72;
 
-    final Color accentColor = previewColor ??
-        (nitroActive ? Colors.cyanAccent : Colors.redAccent);
+    final Color accentColor =
+        previewColor ?? (nitroActive ? Colors.cyanAccent : Colors.redAccent);
     final List<Color> bodyGradient = previewColor != null
         ? [previewColor!, Color.lerp(previewColor!, Colors.black, 0.55)!]
         : (nitroActive
-            ? [Colors.cyanAccent, Colors.blue.shade900]
-            : [Colors.red.shade400, Colors.red.shade900]);
+              ? [Colors.cyanAccent, Colors.blue.shade900]
+              : [Colors.red.shade400, Colors.red.shade900]);
 
     return SizedBox(
       width: width,
@@ -255,8 +250,8 @@ class PlayerCarWidget extends StatelessWidget {
                   color: previewColor != null
                       ? previewColor!.withOpacity(.5)
                       : (nitroActive
-                          ? Colors.cyanAccent.withOpacity(.6)
-                          : Colors.black.withOpacity(.4)),
+                            ? Colors.cyanAccent.withOpacity(.6)
+                            : Colors.black.withOpacity(.4)),
                   blurRadius: nitroActive ? 18 : 6,
                   spreadRadius: nitroActive ? 2 : 1,
                   offset: const Offset(0, 3),

@@ -183,11 +183,8 @@ class GameController extends GetxController {
     _soundService.playCarSound();
   }
 
-  // OPTIMIZED: Only update every 2 frames to reduce CPU load
   void updateGameFrame(double deltaTime) {
     if (gameOver.value) return;
-
-    // Skip every other frame for non-critical updates
 
     distance.value += speed.value * deltaTime * 4.5;
     score.value = distance.value ~/ 10;
@@ -501,9 +498,6 @@ class GameController extends GetxController {
     }
   }
 
-  // ============================================================
-  // CONTINUOUS MOVEMENT (for hold buttons) - FASTER RESPONSE
-  // ============================================================
   void startMoveLeft() {
     if (gameOver.value) return;
     _stopMoveRight();
@@ -571,9 +565,6 @@ class GameController extends GetxController {
   }
 
   void stopBoostHold() {
-    // Releasing now actually stops the boost instead of always running
-    // the full 5 seconds. The cooldown you get back is scaled to how
-    // much of the boost you actually used.
     if (isBoosting.value) {
       _stopBoost();
     }
@@ -603,7 +594,10 @@ class GameController extends GetxController {
 
     _boostTimer?.cancel();
     _boostTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      boostTimeLeft.value = (boostTimeLeft.value - 0.1).clamp(0.0, maxBoostSeconds);
+      boostTimeLeft.value = (boostTimeLeft.value - 0.1).clamp(
+        0.0,
+        maxBoostSeconds,
+      );
       if (boostTimeLeft.value <= 0) {
         timer.cancel();
         _stopBoost();
@@ -635,7 +629,10 @@ class GameController extends GetxController {
     boostCooldown.value = cooldownSeconds;
     _cooldownTimer?.cancel();
     _cooldownTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-      boostCooldown.value = (boostCooldown.value - 0.1).clamp(0.0, maxCooldownSeconds);
+      boostCooldown.value = (boostCooldown.value - 0.1).clamp(
+        0.0,
+        maxCooldownSeconds,
+      );
       if (boostCooldown.value <= 0) {
         boostCooldown.value = 0.0;
         _isCooldownActive = false;

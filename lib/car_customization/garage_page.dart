@@ -99,12 +99,6 @@ class _GaragePageState extends State<GaragePage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Car preview — reuses the same widget the game
-                          // itself uses for the player car. Shows the real
-                          // PNG if present; otherwise falls back to the
-                          // drawn car (windshield, lights, mirrors) tinted
-                          // to this skin's color, so it's never just a
-                          // plain colored box.
                           Container(
                             width: 92,
                             height: 92,
