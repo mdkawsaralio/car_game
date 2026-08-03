@@ -7,7 +7,7 @@ class Achievement {
   final String title;
   final String description;
   final int threshold;
-  final String type; // 'distance', 'run_coins', 'total_coins', 'boosts'
+  final String type;
   final int rewardCoins;
   bool unlocked = false;
 
@@ -91,7 +91,6 @@ class AchievementService {
     return allAchievements.where((a) => !a.unlocked).toList();
   }
 
-  // Call this method after a game round ends with the player's stats
   void checkAchievements({
     int? distance,
     int? runCoins,
@@ -120,7 +119,6 @@ class AchievementService {
       }
 
       if (achieved) {
-        // Mark as unlocked
         a.unlocked = true;
         _prefs?.setBool('ach_${a.id}', true);
 
@@ -138,13 +136,11 @@ class AchievementService {
           ),
         );
 
-        // Award coins via callback (handled in game_controller)
         onAchievementUnlocked?.call(a.rewardCoins);
       }
     }
   }
 
-  // Reset all achievements (for testing)
   Future<void> resetAll() async {
     for (var a in allAchievements) {
       a.unlocked = false;

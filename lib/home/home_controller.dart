@@ -18,7 +18,6 @@ class HomeController extends GetxController {
     super.onInit();
     _firebaseUser.bindStream(FirebaseAuth.instance.authStateChanges());
 
-    // ✅ Play home page music when home screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _playHomeMusic();
     });
@@ -26,24 +25,19 @@ class HomeController extends GetxController {
 
   @override
   void onClose() {
-    // Don't stop music here
     super.onClose();
   }
 
-  // ✅ Called when returning from game
   void onResume() {
     _playHomeMusic();
   }
 
   Future<void> _playHomeMusic() async {
-    // Only stop game sounds
     _soundService.stopCarSound();
     _soundService.stopTurboSound();
 
-    // Small delay for cleanup
     await Future.delayed(const Duration(milliseconds: 100));
 
-    // Play home music
     await _soundService.playHomePageMusic();
   }
 

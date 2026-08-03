@@ -110,7 +110,6 @@ class LeaderboardService {
     }
   }
 
-  // Get current player's stats
   Future<PlayerStats?> getCurrentPlayerStats() async {
     final User? user = _auth.currentUser;
     if (user == null) return null;
@@ -126,7 +125,6 @@ class LeaderboardService {
     }
   }
 
-  // Get top players (limited)
   Future<List<PlayerStats>> getTopPlayers({int limit = 10}) async {
     try {
       final query = await _firestore
@@ -143,7 +141,6 @@ class LeaderboardService {
     }
   }
 
-  // Stream for real-time leaderboard updates
   Stream<List<PlayerStats>> getLeaderboardStream({int limit = 10}) {
     try {
       return _firestore

@@ -6,7 +6,8 @@ class SoundService extends GetxService {
   final AudioPlayer _carPlayer = AudioPlayer();
   final AudioPlayer _musicPlayer = AudioPlayer();
   final AudioPlayer _sfxPlayer = AudioPlayer(); // crash sound (rare, one-off)
-  final AudioPlayer _turboPlayer = AudioPlayer(); // kept, no longer used for boost
+  final AudioPlayer _turboPlayer =
+      AudioPlayer(); // kept, no longer used for boost
 
   // Small pool of pre-configured players for the coin pickup sound.
   // Coins can be collected in quick succession, and PlayerMode.lowLatency
@@ -140,10 +141,10 @@ class SoundService extends GetxService {
     } catch (_) {}
   }
 
-  /// Updates engine volume/pitch based on current speed. When [boosting]
-  /// is true, the engine gets audibly louder and a bit higher-pitched
-  /// instead of layering a separate turbo sound on top.
-  Future<void> setCarSpeed(double speedNormalized, {bool boosting = false}) async {
+  Future<void> setCarSpeed(
+    double speedNormalized, {
+    bool boosting = false,
+  }) async {
     if (!_isCarPlaying) return;
     final speed = speedNormalized.clamp(0.0, 1.0);
 
@@ -167,9 +168,6 @@ class SoundService extends GetxService {
 
   bool get isCarPlaying => _isCarPlaying;
 
-  // Kept for potential future use, but no longer called for boost —
-  // boosting now just raises the car engine's own volume/pitch via
-  // setCarSpeed(boosting: true) instead of layering a second sound.
   Future<void> startTurboSound() async {
     if (!isSoundEnabled.value || _isTurboPlaying) return;
     try {
@@ -202,8 +200,7 @@ class SoundService extends GetxService {
     try {
       final player = _coinPlayers[_coinPlayerIndex];
       _coinPlayerIndex = (_coinPlayerIndex + 1) % _coinPlayers.length;
-      // Fire-and-forget: this player is already loaded and configured,
-      // so play() is the only call — nothing to reconfigure per pickup.
+
       unawaited(player.play(AssetSource(coinSound), volume: 0.35));
     } catch (_) {}
   }
