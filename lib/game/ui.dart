@@ -270,9 +270,7 @@ class GameHud extends StatelessWidget {
   }
 }
 
-// ============================================================
-// GAME CONTROL PANEL - HOLD TO BOOST
-// ============================================================
+
 class GameControlPanel extends StatelessWidget {
   final VoidCallback onMoveLeftStart;
   final VoidCallback onMoveLeftStop;
@@ -469,8 +467,7 @@ class _BoostButtonState extends State<_BoostButton>
           _pressStartedBoost = false;
           widget.onBoostStop();
         } else if (!widget.isBoosting && !widget.isGameOver) {
-          // Tapped while boost wasn't available (e.g. on cooldown) —
-          // treat the tap as an attempt to buy an instant boost.
+
           widget.onBuyBoost();
         }
       },
@@ -483,7 +480,7 @@ class _BoostButtonState extends State<_BoostButton>
       child: AnimatedBuilder(
         animation: _pulseController,
         builder: (context, child) {
-          // Only animate the glow pulse when ready or firing.
+
           final double t = (ready || widget.isBoosting)
               ? _pulseController.value
               : 0.0;
@@ -597,8 +594,7 @@ class _BoostButtonState extends State<_BoostButton>
   }
 }
 
-// GAME OVER MODAL
-// ============================================================
+
 class GameOverModal extends StatelessWidget {
   final double screenWidth;
   final int finalScore;
@@ -753,7 +749,7 @@ class GameOverModal extends StatelessWidget {
       );
     }
 
-    // LOGGED-IN MODE - Full dashboard with leaderboard
+  
     return Positioned.fill(
       child: Container(
         color: Colors.black.withOpacity(0.92),

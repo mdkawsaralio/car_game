@@ -37,9 +37,6 @@ class MyApp extends StatelessWidget {
       Get.put(AchievementService(), permanent: true);
     }
     if (!Get.isRegistered<UserDataService>()) {
-      // Garage page (and others) call Get.find<UserDataService>() —
-      // it must be registered here or that lookup throws and the
-      // garage page fails to build.
       Get.put(UserDataService(), permanent: true);
     }
 

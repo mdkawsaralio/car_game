@@ -68,7 +68,6 @@ class GameController extends GetxController {
   double normalSpeedBase = 6.0;
   double nitroSpeedMultiplier = 2.0;
 
-  // Boost
   RxBool isBoosting = false.obs;
   RxDouble boostCooldown = 0.0.obs;
   Timer? _boostTimer;
